@@ -2,7 +2,6 @@ module Main where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
-import Graphics.Gloss.Data.Color
 import Model
 import View
 import Controller

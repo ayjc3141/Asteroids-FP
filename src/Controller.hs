@@ -1,5 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use any" #-}
 module Controller where
-import Graphics.Gloss.Data.Point
 import Graphics.Gloss.Interface.IO.Game
 import Model
 
@@ -142,7 +143,7 @@ acceleratePlayer amt gs =
   let p = players gs
       m = playerMovement p
       (vx, vy) = velocity m
-      dir = -rotation m * pi / 180                                                --graden -> radialen
+      dir = -(rotation m * pi / 180)                                                --graden -> radialen
       newVel =
         (vx + cos dir * amt, vy + sin dir * amt)                                  -- nieuwe snelheid
   in gs
@@ -202,7 +203,7 @@ spawnBullet gs =
       m = playerMovement p
       (x, y) = position m
       (vx, vy) = velocity m
-      dir = -rotation m * pi / 180
+      dir = -(rotation m * pi / 180)
       offset = 20
 
       bulletPosition =
