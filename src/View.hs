@@ -16,7 +16,28 @@ drawGame gs =
     , drawEffects (effects gs)
     , drawHUD gs
     , drawPauseOverlay gs
+    , drawGameOver gs
     ]
+
+drawGameOver :: GameState -> Picture
+drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 900 700)
+                                            , translate (-200) 100 $
+                                              scale  0.5 0.5 $
+                                              color red $
+                                              Text "Game Over" 
+                                            , translate (-100) 25 $
+                                              scale 0.25 0.25 $
+                                              color white $
+                                              Text ("Score: " ++ show (score gs))
+                                            , translate 0 (-100) $
+                                              color white $
+                                              rectangleSolid 200 50
+                                            , translate 0 (-100) $
+                                              scale 0.25 0.25 $
+                                              color black $
+                                              Text "Opnieuw"
+                                            ]
+                | otherwise = Blank 
 
 -- teken entiteiten
 --drawAllEntities :: [Entity] -> Picture
