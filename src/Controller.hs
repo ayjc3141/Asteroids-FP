@@ -28,7 +28,8 @@ handleInput _ gs = pure gs                                                      
 
 updateWorld :: Float -> GameState -> IO GameState
 updateWorld dt gs                                                                               -- dt = tijd tussen frames, gs = huidige gamestate
-  | paused gs = pure gs                                                                         -- als spel gepauzeerd = niks doen
+  | paused gs = pure gs  -- als spel gepauzeerd = niks doen
+  | lives gs <= 0 = pure gs
   | otherwise = do
       let inpRaw = playerInput (players gs)                                                                -- ruwe input van speler
       let inpAllowed = limitInputForRules inpRaw                                                -- filter input volgens regels (wat mag tegelijk)
