@@ -48,24 +48,14 @@ updateWorld dt gs                                                               
                   , bullets = map (moveBullet dt) (bullets gs4)
                   }                       
       let limited = limitPlayerSpeed moved                                                      -- limiet op speler snelheid
+      
+      let gs6 = handlePlayerCollisions limited
 
-      pure (checkWave limited)                                                                  -- check of nieuwe wave nodig is
+      pure (checkWave gs6)                                                                  -- check of nieuwe wave nodig is
 
 
 limitInputForRules :: Input -> Input
-limitInputForRules inp
-  | shoot inp =                                                                                 -- als speler schiet
-      let thrustOK = thrust inp                                                                 -- check thrust actief
-          leftOK   = turnLeft inp                                                               -- check links actief
-          rightOK  = turnRight inp                                                              -- check rechts actief
-      in if thrustOK                                                                            -- tijdens schieten 1 beweging tegelijk
-            then inp { turnLeft = False, turnRight = False }                                    -- thrust prioriteit
-         else if leftOK
-            then inp { turnRight = False, thrust = False }                                      -- anders links
-         else if rightOK
-            then inp { turnLeft = False, thrust = False }                                       -- anders rechts
-         else inp                                                                               -- anders stilstaan
-  | otherwise = inp                                                                             -- niet schieten = alles mag tegelijk
+limitInputForRules inp = inp                                       
 
 
 checkWave :: GameState -> GameState
@@ -221,6 +211,26 @@ spawnBullet gs =
   in gs { bullets = bullet : bullets gs }
 
 
+collides :: Point -> Float -> Point -> Float -> Bool
+collides (x1, y1) r1 (x2, y2) r2 = len ((x1 - x2), (y1 - y2)) < r1 + r2
+
+hitsPlayer :: Player -> Enemy -> Bool
+hitsPlayer p e = collides (px, py) (playerHitbox p) (ex, ey) (enemyHitbox e) 
+            where
+                m = playerMovement p
+                n = enemyMovement e
+                (px, py) = position m
+                (ex, ey) = position n
+
+
+
+handlePlayerCollisions :: GameState -> GameState
+handlePlayerCollisions gs | null hit = gs
+                          | otherwise = gs { enemies = rest, lives = lives gs -1}
+                        where
+                            p = players gs
+                            hit = filter (hitsPlayer p) (enemies gs)
+                            rest = filter (not . hitsPlayer p) (enemies gs)
 
 togglePause :: GameState -> GameState
 togglePause gs = gs { paused = not (paused gs) }                                               -- toggle pauze aan/uit
