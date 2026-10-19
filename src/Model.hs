@@ -96,7 +96,7 @@ data HighScore = HighScore
 initialGameState :: GameState
 initialGameState =
   GameState
-    { players = Player 1 (Movement (0,0) (0,0) 0) True 1 (Input False False False False)
+    { players = Player 1 (Movement (0,0) (0,0) 0) True 5 (Input False False False False)
     , enemies = []
     , bullets = []
     , effects = []
