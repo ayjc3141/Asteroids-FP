@@ -51,7 +51,9 @@ updateWorld dt gs                                                               
       
       let gs6 = handlePlayerCollisions limited
 
-      pure (checkWave gs6)                                                                  -- check of nieuwe wave nodig is
+      let gs7 = handleBulletCollisions gs6
+
+      pure (checkWave gs7)                                                                  -- check of nieuwe wave nodig is
 
 
 limitInputForRules :: Input -> Input
@@ -235,7 +237,25 @@ handlePlayerCollisions gs | null hit = gs
 togglePause :: GameState -> GameState
 togglePause gs = gs { paused = not (paused gs) }                                               -- toggle pauze aan/uit
 
+hitsBullet :: Bullet -> Enemy -> Bool
+hitsBullet b e = collides (bx, by) (bulletHitbox b) (ex, ey) (enemyHitbox e)
+    where
+        m = bulletMovement b
+        n = enemyMovement e
+        (bx, by) = position m
+        (ex, ey) = position n
 
+handleBulletCollisions :: GameState -> GameState
+handleBulletCollisions gs | null hit = gs
+                          | otherwise = gs {enemies = rest, bullets = restb, score = score gs + 100}
+                        where
+                            bs = bullets gs 
+                            es = enemies gs
+                            isHit e = any (\b -> hitsBullet b e) bs
+                            hit = filter isHit es
+                            rest = filter (not . isHit) (enemies gs)
+                            bulletsHit b = any (\e -> hitsBullet b e) es
+                            restb = filter (not . bulletsHit) bs
 
 updateInput :: (Input -> Input) -> GameState -> GameState
 updateInput f gs = 
