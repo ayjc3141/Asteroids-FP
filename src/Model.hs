@@ -1,5 +1,6 @@
 module Model where
 import Graphics.Gloss.Data.Point
+
 -- data spel, huidige toestand (state)
 -- alle types
 -- ik mis volgensmij wel ergens iets maar weet niet wat, niet goed naar gekeken.
@@ -74,8 +75,7 @@ data GameState = GameState
   , lives   :: Int
   , wave    :: Int
   , paused  :: Bool
-  , rngSeed     :: Int
-  , cooldown :: Float
+  , cooldown:: Float
   } deriving (Show)
 
 --animaties
@@ -102,8 +102,7 @@ initialGameState =
     , effects = []
     , score   = 0
     , lives   = 3
-    , wave    = 1
+    , wave    = 0
     , paused  = False
-    , rngSeed = 42
     , cooldown = 0                                      -- nieuw
     }

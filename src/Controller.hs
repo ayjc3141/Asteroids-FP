@@ -1,9 +1,12 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use any" #-}
+{-# HLINT ignore "Avoid lambda using `infix`" #-}
+{-# HLINT ignore "Avoid lambda" #-}
 module Controller where
 import Graphics.Gloss.Interface.IO.Game
 import Model
-
+import System.Random (randomRIO)
+import Control.Monad 
 -- wat ik niet heb kunnen oplossen: 2 invoeren (voor/ links of voor/ rechts) + schieten ingedrukt
 
 
@@ -43,29 +46,29 @@ updateWorld dt gs                                                               
       let gs4 = tryShoot dt gs3                                                                 -- altijd aanroepen, checkt cooldown en spawnt evt. bullet
 
       -- beweeg alles
-      let moved = gs4 
+      let moved = gs4
                   { players = movePlayer dt (players gs4)
                   , enemies = map (moveEnemy dt) (enemies gs4)
                   , bullets = map (moveBullet dt) (bullets gs4)
-                  }                       
+                  }
       let limited = limitPlayerSpeed moved                                                      -- limiet op speler snelheid
-      
+
       let gs6 = handlePlayerCollisions limited
 
       let gs7 = handleBulletCollisions gs6
 
-      pure (checkWave gs7)                                                                  -- check of nieuwe wave nodig is
+      checkWave gs7                                                                  -- check of nieuwe wave nodig is
 
 
 limitInputForRules :: Input -> Input
-limitInputForRules inp = inp                                       
+limitInputForRules inp = inp
 
 
-checkWave :: GameState -> GameState
+checkWave :: GameState -> IO GameState
 checkWave gs
-  | null (filter isAsteroid (map enemyType (enemies gs))) =                                                     --geen asteroid?
+  | null (enemies gs) =                                                     --geen asteroid?
       spawnNewWave (wave gs + 1) gs                                                             --dan nieuwe wave
-  | otherwise = gs                                                                              --anders niks doen
+  | otherwise = pure gs                                                                              --anders niks doen
 
 
   -- klaar
@@ -79,19 +82,23 @@ isAsteroid et =
     , AsteroidMoving
     ]
 
-spawnNewWave :: Int -> GameState -> GameState
-spawnNewWave n gs =
-  let newAsteroids =
-        [ Enemy AsteroidLarge (Movement (x,y) (vx, vy) 0) 1 True 30                        -- nieuwe asteroid entiteiten
-        | i <- [1 .. (3 + n)]                                                                   -- aantal groeit per wave
-        , let x  = fromIntegral ((i * 150) `mod` 600 - 300)                                     -- x positie verspreid
-        , let y  = fromIntegral ((i * 230) `mod` 600 - 300)                                     -- y positie verspreid
-        , let vx = fromIntegral (((i * 7) `mod` 8) - 4)                                         -- random-achtige snelheid x
-        , let vy = fromIntegral (((i * 5) `mod` 8) - 4)                                         -- random-achtige snelheid y
-        ]
-  in gs { enemies = enemies gs ++ newAsteroids, wave = n }                                    -- voeg toe aan game
+spawnNewWave :: Int -> GameState -> IO GameState
+spawnNewWave n gs = do 
+  newEnemies <- replicateM (3+n) spawnEnemy
+  pure $ gs { enemies = enemies gs ++ newEnemies, wave = n }                                    -- voeg toe aan game
 
-
+spawnEnemy :: IO Enemy
+spawnEnemy = do
+  x <- randomRIO (-400,400)
+  y <- randomRIO (-300,300)
+  vx <- randomRIO (-30,30)
+  vy <- randomRIO (-30,30)
+  pure $ Enemy
+    AsteroidLarge                                 --Wil ook nog Saucer toevoegen wanneer we daar modellen voor hebben
+    (Movement (x,y) (vx,vy) 0)
+    1
+    True
+    30
   -- klaar
 moveMovement :: Float -> Movement -> Movement
 moveMovement dt m =
@@ -127,7 +134,7 @@ turnPlayer deg gs =
            p { playerMovement =
                  m { rotation = rotation m + deg }
              }
-       }                                                                         
+       }
 
 -- klaar
 
@@ -149,15 +156,15 @@ acceleratePlayer amt gs =
 
 
 limitPlayerSpeed :: GameState -> GameState
-limitPlayerSpeed gs = 
+limitPlayerSpeed gs =
       let p = players gs
           m = playerMovement p
-          (vx,vy) = velocity m  
+          (vx,vy) = velocity m
           speed = len (vx,vy)
           maxSpeed = 60
-          factor = maxSpeed / speed                                               
+          factor = maxSpeed / speed
       in if speed > maxSpeed                                                      --if speed exceeds max  
-         then 
+         then
             gs
               { players =
                   p {playerMovement =
@@ -180,9 +187,9 @@ setShoot :: Bool -> GameState -> GameState
 setShoot val gs =                                                                              -- update shootstatus bij indrukken/loslaten
   let p     = players gs
       inp   = playerInput p
-      newGS = gs 
-              { players = 
-                p {playerInput = 
+      newGS = gs
+              { players =
+                p {playerInput =
                   inp { shoot = val }
                   }
               }
@@ -203,7 +210,7 @@ spawnBullet gs =
         (x + cos dir * offset, y + sin dir * offset)
 
       bulletVelocity =
-        (vx + cos dir * 40, vy + sin dir * 40)
+        (vx + cos dir * 90, vy + sin dir * 90)
 
       bulletMovement' =
         Movement bulletPosition bulletVelocity (rotation m)
@@ -215,10 +222,10 @@ spawnBullet gs =
 
 
 collides :: Point -> Float -> Point -> Float -> Bool
-collides (x1, y1) r1 (x2, y2) r2 = len ((x1 - x2), (y1 - y2)) < r1 + r2
+collides (x1, y1) r1 (x2, y2) r2 = len (x1 - x2, y1 - y2) < r1 + r2
 
 hitsPlayer :: Player -> Enemy -> Bool
-hitsPlayer p e = collides (px, py) (playerHitbox p) (ex, ey) (enemyHitbox e) 
+hitsPlayer p e = collides (px, py) (playerHitbox p) (ex, ey) (enemyHitbox e)
             where
                 m = playerMovement p
                 n = enemyMovement e
@@ -250,7 +257,7 @@ handleBulletCollisions :: GameState -> GameState
 handleBulletCollisions gs | null hit = gs
                           | otherwise = gs {enemies = rest, bullets = restb, score = score gs + 100}
                         where
-                            bs = bullets gs 
+                            bs = bullets gs
                             es = enemies gs
                             isHit e = any (\b -> hitsBullet b e) bs
                             hit = filter isHit es
@@ -259,7 +266,7 @@ handleBulletCollisions gs | null hit = gs
                             restb = filter (not . bulletsHit) bs
 
 updateInput :: (Input -> Input) -> GameState -> GameState
-updateInput f gs = 
+updateInput f gs =
   gs
       { players =
           p { playerInput = f (playerInput p) }                                                --update player input
