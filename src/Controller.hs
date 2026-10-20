@@ -7,6 +7,7 @@ import Graphics.Gloss.Interface.IO.Game
 import Model
 import System.Random (randomRIO)
 import Control.Monad 
+import Graphics.Gloss.Data.Point
 -- wat ik niet heb kunnen oplossen: 2 invoeren (voor/ links of voor/ rechts) + schieten ingedrukt
 
 
@@ -273,3 +274,7 @@ updateInput f gs =
       }
   where
     p = players gs
+
+{-wrap :: Point -> Point
+wrap (x,y) | pointInBox (x,y) (-450,350) (450,-350) = (x,y)
+           | otherwise = -}
