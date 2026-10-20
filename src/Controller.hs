@@ -106,7 +106,7 @@ moveMovement dt m =
   let (x, y) = position m
       (vx, vy) = velocity m
   in m
-       { position = (x + vx * dt, y + vy * dt) }
+       { position = wrapPos (x + vx * dt, y + vy * dt) }
 
 movePlayer :: Float -> Player -> Player
 movePlayer dt p =
@@ -121,7 +121,11 @@ moveEnemy dt e =
 moveBullet :: Float -> Bullet -> Bullet
 moveBullet dt b =
   b { bulletMovement =
-        moveMovement dt (bulletMovement b) }
+      (bulletMovement b) 
+        {position = (x + vx * dt, y + vy * dt)}}
+      where
+        (x,y) = position $ bulletMovement b
+        (vx,vy) = velocity $ bulletMovement b
 
 
    -- klaar
@@ -275,6 +279,11 @@ updateInput f gs =
   where
     p = players gs
 
-{-wrap :: Point -> Point
-wrap (x,y) | pointInBox (x,y) (-450,350) (450,-350) = (x,y)
-           | otherwise = -}
+wrap :: Float -> Float -> Float -> Float                                                        
+wrap mini maxi x | x < mini = maxi
+                 | x > maxi = mini
+                 | otherwise = x
+
+
+wrapPos :: Point -> Point                                                                      --zorgt ervoor dat player of enemy aan de andere kant van het scherm terug komen.
+wrapPos (x,y) = (wrap (-450) 450 x, wrap (-350) 350 y)
