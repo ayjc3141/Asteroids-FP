@@ -67,13 +67,13 @@ limitInputForRules inp = inp
 
 checkWave :: GameState -> IO GameState
 checkWave gs
-  | null (enemies gs) =                                                     --geen asteroid?
+  | null (enemies gs) =                                                                         --geen enemy?
       spawnNewWave (wave gs + 1) gs                                                             --dan nieuwe wave
-  | otherwise = pure gs                                                                              --anders niks doen
+  | otherwise = pure gs                                                                         --anders niks doen
 
 
   -- klaar
-isAsteroid :: EnemyType -> Bool
+{- isAsteroid :: EnemyType -> Bool    Niet meer nodig denk ik?
 isAsteroid et =
   et `elem`                                                                                     -- check of entitytype een asteroid is
     [ MeteorEnormous
@@ -81,25 +81,46 @@ isAsteroid et =
     , AsteroidMedium
     , AsteroidSmall
     , AsteroidMoving
-    ]
+    ] -}
 
 spawnNewWave :: Int -> GameState -> IO GameState
 spawnNewWave n gs = do 
-  newEnemies <- replicateM (3+n) spawnEnemy
-  pure $ gs { enemies = enemies gs ++ newEnemies, wave = n }                                    -- voeg toe aan game
+  newEnemies <- replicateM (3+n) (spawnEnemy playerPos)
+  pure $ gs { enemies = enemies gs ++ newEnemies, wave = n }                                    -- Voeg toe aan game
+  where
+    playerPos = position $ playerMovement $ players $ gs
 
-spawnEnemy :: IO Enemy
-spawnEnemy = do
-  x <- randomRIO (-400,400)
-  y <- randomRIO (-300,300)
-  vx <- randomRIO (-30,30)
-  vy <- randomRIO (-30,30)
+validSpawn :: Point -> IO Point                                                                 -- genereert enemy positions die niet te dichtbij de player zijn
+validSpawn playerPos = do
+    x <- randomRIO (-400,400)
+    y <- randomRIO (-300,300)
+    if not (collides playerPos 50 (x,y) 50)
+      then pure (x,y)
+      else validSpawn playerPos
+
+pickEnemy :: [(Int, EnemyType)] -> IO EnemyType
+pickEnemy enWeights= do
+  nr <- randomRIO (1, weightSum)
+  if (nr - head weights) <= 0
+    then pure (snd $ head enWeights)
+    else pickEnemy $ tail enWeights
+  where
+    weightSum = sum weights
+    weights = map fst enWeights
+
+
+spawnEnemy :: Point -> IO Enemy
+spawnEnemy playerPos = do
+  (x,y) <- validSpawn playerPos
+  vx    <- randomRIO (-30,30)
+  vy    <- randomRIO (-30,30)
+  typ   <- pickEnemy enemyWeights
   pure $ Enemy
-    AsteroidLarge                                 --Wil ook nog Saucer toevoegen wanneer we daar modellen voor hebben
+    typ                                           --Wil ook nog Saucer toevoegen wanneer we daar modellen voor hebben
     (Movement (x,y) (vx,vy) 0)
-    1
+    (hpEnemy typ)
     True
-    30
+    (hitboxEnemy typ)
   -- klaar
 moveMovement :: Float -> Movement -> Movement
 moveMovement dt m =
