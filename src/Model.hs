@@ -100,6 +100,7 @@ data GameState = GameState
   , wave    :: Int
   , paused  :: Bool
   , cooldown:: Float
+  , saucercd:: Float
   } deriving (Show)
 
 --animaties
@@ -129,4 +130,5 @@ initialGameState =
     , wave    = 0
     , paused  = False
     , cooldown = 0                                      -- nieuw
+    , saucercd = 0
     }

@@ -6,7 +6,8 @@ module Controller where
 import Graphics.Gloss.Interface.IO.Game
 import Model
 import System.Random (randomRIO)
-import Control.Monad 
+import Control.Monad
+import Data.List (foldl') 
 
 -- wat ik niet heb kunnen oplossen: 2 invoeren (voor/ links of voor/ rechts) + schieten ingedrukt
 
@@ -45,20 +46,21 @@ updateWorld dt gs                                                               
 
       -- schieten en cooldown
       let gs4 = tryShoot dt gs3                                                                 -- altijd aanroepen, checkt cooldown en spawnt evt. bullet
-
+      let gs5 = tryShootSaucer dt gs4
       -- beweeg alles
-      let moved = gs4
-                  { players = movePlayer dt (players gs4)
-                  , enemies = map (moveEnemy dt) (enemies gs4)
-                  , bullets = map (moveBullet dt) (bullets gs4)
+      let moved = gs5
+                  { players = movePlayer dt (players gs5)
+                  , enemies = map (moveEnemy dt) (enemies gs5)
+                  , bullets = map (moveBullet dt) (bullets gs5)
                   }
       let limited = limitPlayerSpeed moved                                                      -- limiet op speler snelheid
 
       let gs6 = handlePlayerCollisions limited
 
       let gs7 = handleBulletCollisions gs6
-
-      checkWave gs7                                                                  -- check of nieuwe wave nodig is
+      let gs8 = handleSaucBulletCollisions gs7
+      
+      checkWave gs8                                                                  -- check of nieuwe wave nodig is
 
 
 limitInputForRules :: Input -> Input
@@ -73,7 +75,7 @@ checkWave gs
 
 
   -- klaar
-{- isAsteroid :: EnemyType -> Bool    Niet meer nodig denk ik?
+{- isAsteroid :: EnemyType -> Bool    --Niet meer nodig denk ik?
 isAsteroid et =
   et `elem`                                                                                     -- check of entitytype een asteroid is
     [ MeteorEnormous
@@ -247,6 +249,43 @@ spawnBullet gs =
   in gs { bullets = bullet : bullets gs }
 
 
+
+spawnSaucerBullet :: Enemy -> Player -> GameState -> GameState
+spawnSaucerBullet saucer player gs =
+  let
+    (sx, sy) = position (enemyMovement saucer)
+    (px, py) = position (playerMovement player)
+    dx       = px - sx
+    dy       = py - sy
+    distance = len (dx,dy)
+    (dirX, dirY) = (dx / distance, dy / distance) --Richting waar de saucer schiet
+
+    bulletMovement' =
+      Movement
+        (sx, sy)
+        (dirX * 90, dirY * 90)
+        0
+    bullet = Bullet bulletMovement' Foe 2
+  in gs { bullets = bullet : bullets gs }
+
+tryShootSaucer :: Float -> GameState -> GameState
+tryShootSaucer dt gs =                                                                       
+  let cd'     = max 0 (saucercd gs - dt)
+      saucers = filter isSaucer $ enemies gs
+      p       = players gs
+
+  in if any isSaucer (enemies gs) && cd' <= 0
+        then foldl' (\state saucer -> spawnSaucerBullet saucer p state) (gs {saucercd = 2.5}) saucers
+        else gs {saucercd = cd' } 
+
+
+isSaucer :: Enemy -> Bool
+isSaucer en =
+  et `elem`                                                                                     -- check of entitytype een asteroid is
+    [SaucerEnormous, SaucerSmall]
+    where
+      et = enemyType en
+
 collides :: Point -> Float -> Point -> Float -> Bool
 collides (x1, y1) r1 (x2, y2) r2 = len (x1 - x2, y1 - y2) < r1 + r2
 
@@ -264,8 +303,8 @@ handlePlayerCollisions :: GameState -> GameState
 handlePlayerCollisions gs | null hit = gs
                           | otherwise = gs { enemies = rest, lives = lives gs -1}
                         where
-                            p = players gs
-                            hit = filter (hitsPlayer p) (enemies gs)
+                            p    = players gs
+                            hit  = filter (hitsPlayer p) (enemies gs)
                             rest = filter (not . hitsPlayer p) (enemies gs)
 
 togglePause :: GameState -> GameState
@@ -274,22 +313,42 @@ togglePause gs = gs { paused = not (paused gs) }                                
 hitsBullet :: Bullet -> Enemy -> Bool
 hitsBullet b e = collides (bx, by) (bulletHitbox b) (ex, ey) (enemyHitbox e)
     where
-        m = bulletMovement b
-        n = enemyMovement e
+        m        = bulletMovement b
+        n        = enemyMovement e
         (bx, by) = position m
         (ex, ey) = position n
+
+bulletHitsPlayer :: Bullet -> Player -> GameState -> Bool
+bulletHitsPlayer b p gs = 
+  let 
+    bm       = bulletMovement b
+    pm       = playerMovement p
+    (bx, by) = position bm
+    (px, py) = position pm
+  in collides (bx,by) (bulletHitbox b) (px, py) (playerHitbox p)
+
 
 handleBulletCollisions :: GameState -> GameState
 handleBulletCollisions gs | null hit = gs
                           | otherwise = gs {enemies = rest, bullets = restb, score = score gs + 100}
                         where
-                            bs = bullets gs
-                            es = enemies gs
-                            isHit e = any (\b -> hitsBullet b e) bs
-                            hit = filter isHit es
-                            rest = filter (not . isHit) (enemies gs)
-                            bulletsHit b = any (\e -> hitsBullet b e) es
-                            restb = filter (not . bulletsHit) bs
+                            bs            = bullets gs
+                            es            = enemies gs
+                            isHit e       = any (\b -> bulletType b == Friend && hitsBullet b e) bs
+                            hit           = filter isHit es
+                            rest          = filter (not . isHit) es
+                            bulletsHit b  = any (\e -> bulletType b == Friend && hitsBullet b e) es
+                            restb         = filter (not . bulletsHit) bs
+
+handleSaucBulletCollisions :: GameState -> GameState
+handleSaucBulletCollisions gs = gs {lives = rest, bullets = restb}
+                        where
+                            bs            = bullets gs
+                            p             = players gs
+                            isHit p       = any (\b -> bulletType b == Foe && bulletHitsPlayer b p gs) bs
+                            rest          = if isHit p then (lives gs) - 1 else lives gs
+                            bulletsHit b  = (\p -> bulletType b == Foe && bulletHitsPlayer b p gs) p
+                            restb         = filter (not . bulletsHit) bs
 
 updateInput :: (Input -> Input) -> GameState -> GameState
 updateInput f gs =
