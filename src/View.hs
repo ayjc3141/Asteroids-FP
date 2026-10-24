@@ -72,10 +72,11 @@ drawEnemies l = Pictures (map drawEnemy l)
 drawBullet :: Bullet -> Picture
 drawBullet b =
   translate x y $
-  color yellow $
+  color kleur $
   circleSolid 2
   where
     Movement (x, y) _ _ = bulletMovement b
+    kleur               = if bulletType b == Foe then red else yellow
 
 drawBullets :: [Bullet] -> Picture
 drawBullets l = Pictures (map drawBullet l)
