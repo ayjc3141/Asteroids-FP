@@ -37,7 +37,6 @@ pickEnemy enWeights= do
     weightSum = sum weights
     weights = map fst enWeights
 
-
 spawnEnemy :: Point -> IO Enemy
 spawnEnemy playerPos = do
   (x,y) <- validSpawn playerPos
@@ -48,5 +47,5 @@ spawnEnemy playerPos = do
     typ                                           
     (Movement (x,y) (vx,vy) 0)
     (hpEnemy typ)
-    True
     (hitboxEnemy typ)
+

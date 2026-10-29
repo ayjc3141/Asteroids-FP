@@ -1,5 +1,6 @@
 module Model where
 import Graphics.Gloss.Data.Point
+import Graphics.Gloss
 
 -- data spel, huidige toestand (state)
 -- alle types
@@ -17,6 +18,13 @@ scaleVec t (x0,y0) = (t*x0, t*y0)
 len :: Point -> Float
 len (x,y) = sqrt (x*x + y*y)
 
+rotateVec :: Float -> Point -> Point
+rotateVec degrees (x,y) =
+    (x * cos a - y * sin a,
+     x * sin a + y * cos a)
+  where
+    a = degrees * pi / 180
+
 data Movement = Movement 
   { position :: Point
   , velocity :: Point
@@ -28,7 +36,6 @@ data Enemy = Enemy
   { enemyType      :: EnemyType
   , enemyMovement  :: Movement 
   , enemyHitpoints :: Int
-  , enemyAlive     :: Bool
   , enemyHitbox    :: Float
   } deriving (Show, Eq)
 
@@ -47,9 +54,9 @@ enemyWeights =  [ (20, AsteroidSmall)
                 , (20, AsteroidMedium)
                 , (35, AsteroidLarge)
                 , (5, MeteorEnormous)
-                , (5, AsteroidMoving)
-                , (10, SaucerSmall)
-                , (5, SaucerEnormous)]
+                , (10, AsteroidMoving)
+                , (13, SaucerSmall)
+                , (2, SaucerEnormous)]
 
 hpEnemy :: EnemyType -> Int
 hpEnemy MeteorEnormous = 2
@@ -104,25 +111,16 @@ data GameState = GameState
   } deriving (Show)
 
 --animaties
-data AnimationType = Saucer | Asteroid deriving (Show, Eq)
+data AnimationType = EnemyDeath | PlayerHit deriving (Show, Eq)
 
 data Animation = Animation 
   { animationPosition  :: Point
   , duration           :: Float
   , animationType      :: AnimationType
   , particles          :: [(Point,Point)]
+  , effectColor        :: Color
   } deriving (Show, Eq)
 
-pattern :: [(Point, Point)]
-pattern = 
-    [ ((-5,  0) , (-50,  10))
-    , (( 5,  0) , ( 50, -10))
-    , (( 0,  5) , ( 10,  50))
-    , (( 0, -5) , (-10, -50))
-    , (( 3,  3) , ( 40,  40))
-    , ((-3, -3) , (-40, -40))
-    , ((-3,  3) , (-40,  40))
-    , (( 3, -3) , ( 40, -40))]
 -- score
 data HighScore = HighScore
   { playerName  :: String
@@ -133,7 +131,7 @@ data HighScore = HighScore
 initialGameState :: GameState
 initialGameState =
   GameState
-    { players = Player 1 (Movement (0,0) (0,0) 0) True 5 (Input False False False False)
+    { players = Player 1 (Movement (0,0) (0,0) 0) True 7 (Input False False False False)
     , enemies = []
     , bullets = []
     , effects = []

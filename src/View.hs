@@ -65,7 +65,7 @@ drawEffect animation =
     Pictures
         [ Color kleur (drawParticle particle) | particle <- particles animation]
         where
-          kleur = if animationType animation == Saucer then orange else greyN 0.7
+          kleur = effectColor animation
 
 drawEffects :: [Animation] -> Picture
 drawEffects animations = Pictures (map drawEffect animations)
@@ -101,7 +101,7 @@ colorFor ent = case ent of
   AsteroidLarge   -> greyN 0.6
   AsteroidMedium  -> greyN 0.5
   AsteroidSmall   -> greyN 0.4
-  AsteroidMoving  -> greyN 0.3
+  AsteroidMoving  -> yellow
   SaucerEnormous  -> red
   SaucerSmall     -> orange
 
@@ -116,7 +116,7 @@ shapeFor AsteroidMedium =
 shapeFor AsteroidSmall =
   circle 12
 shapeFor AsteroidMoving =
-  circle 15
+  circle 12
 shapeFor SaucerEnormous =           -- nogmaals, pictures met lijst van vormen, combineert
   scale 1.5 1 $ pictures            -- scale rekt uit. 1.5 horizontaal, 1 verticaal
     [ translate 0 5 (circleSolid 8)

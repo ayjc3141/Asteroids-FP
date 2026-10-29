@@ -53,16 +53,15 @@ spawnBullet gs =
 
 
 
-spawnSaucerBullet :: Enemy -> Player -> GameState -> GameState
-spawnSaucerBullet saucer player gs =
+spawnSaucerBullet :: Enemy -> Float -> Player -> GameState -> GameState
+spawnSaucerBullet saucer angle player gs =
   let
     (sx, sy) = position (enemyMovement saucer)
     (px, py) = position (playerMovement player)
     dx       = px - sx
     dy       = py - sy
     distance = len (dx,dy)
-    (dirX, dirY) = (dx / distance, dy / distance) --Richting waar de saucer schiet
-
+    (dirX, dirY) = if enemyType saucer == SaucerSmall then rotateVec angle (dx / distance, dy / distance) else (dx / distance, dy / distance) --Richting waar de saucer schiet
     bulletMovement' =
       Movement
         (sx, sy)
@@ -71,16 +70,15 @@ spawnSaucerBullet saucer player gs =
     bullet = Bullet bulletMovement' Foe 2
   in gs { bullets = bullet : bullets gs }
 
-tryShootSaucer :: Float -> GameState -> GameState
-tryShootSaucer dt gs =                                                                       
+tryShootSaucer :: Float -> Float -> GameState -> GameState
+tryShootSaucer dt angle gs =                                                                       
   let cd'     = max 0 (saucercd gs - dt)
       saucers = filter isSaucer $ enemies gs
       p       = players gs
 
   in if any isSaucer (enemies gs) && cd' <= 0
-        then foldl' (\state saucer -> spawnSaucerBullet saucer p state) (gs {saucercd = 2.5}) saucers
+        then foldl' (\state saucer -> spawnSaucerBullet saucer angle p state) (gs {saucercd = 2.5}) saucers
         else gs {saucercd = cd' } 
-
 
 isSaucer :: Enemy -> Bool
 isSaucer en =
@@ -104,7 +102,11 @@ hitsPlayer p e = collides (px, py) (playerHitbox p) (ex, ey) (enemyHitbox e)
 
 handlePlayerCollisions :: GameState -> GameState
 handlePlayerCollisions gs | null hit = gs
-                          | otherwise = gs { enemies = rest, lives = lives gs -1}
+                          | otherwise = 
+                              gs 
+                                { enemies = rest
+                                , effects = effects gs ++ [createPlayerHitEffect p]
+                                , lives = lives gs -1}
                         where
                             p    = players gs
                             hit  = filter (hitsPlayer p) (enemies gs)
@@ -138,13 +140,13 @@ handleBulletCollisions gs | null hit = gs
                             hit           = map reduceHP (filter isHit es)
                             reduced       = [if isHit e then reduceHP e else e | e <- es]
                             dead          = [e | e <- reduced, enemyHitpoints e <= 0]
-                            neweffect     = [Animation (position $ enemyMovement e) 0.5 (chooseEffect $ enemyType e) (moveEffect e pattern) | e <- dead]
+                            neweffect     = [enemyEffect e | e <- dead]
                             rest          = [e | e <- reduced, enemyHitpoints e > 0]
                             bulletsHit b  = any (\e -> bulletType b == Friend && hitsBullet b e) es
                             restb         = filter (not . bulletsHit) bs
 
 handleSaucBulletCollisions :: GameState -> GameState
-handleSaucBulletCollisions gs = gs {lives = rest, bullets = restb}
+handleSaucBulletCollisions gs = gs {lives = rest, bullets = restb, effects = effects gs ++ new}
                         where
                             bs            = bullets gs
                             p             = players gs
@@ -152,3 +154,4 @@ handleSaucBulletCollisions gs = gs {lives = rest, bullets = restb}
                             rest          = if isHit p then (lives gs) - 1 else lives gs
                             bulletsHit b  = (\p -> bulletType b == Foe && bulletHitsPlayer b p) p
                             restb         = filter (not . bulletsHit) bs
+                            new           = if isHit p then [createPlayerHitEffect p] else []

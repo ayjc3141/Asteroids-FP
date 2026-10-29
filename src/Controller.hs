@@ -9,7 +9,7 @@ import Shooting
 import Movement
 import Spawning (checkWave) 
 import Animations
-
+import System.Random (randomRIO)
 
 -- klaar
 handleInput :: Event -> GameState -> IO GameState
@@ -35,6 +35,7 @@ updateWorld dt gs                                                               
   | paused gs = pure gs  -- als spel gepauzeerd = niks doen
   | lives gs <= 0 = pure gs
   | otherwise = do
+      angle <- randomRIO (-25, 25)                                                          --schiet angle van kleine saucers
       let inpRaw = playerInput (players gs)                                                                -- ruwe input van speler
 
       -- pas acties toe op volgorde
@@ -44,11 +45,11 @@ updateWorld dt gs                                                               
 
       -- schieten en cooldown
       let gs4 = tryShoot dt gs3                                                                 -- altijd aanroepen, checkt cooldown en spawnt evt. bullet
-      let gs5 = tryShootSaucer dt gs4
+      let gs5 = tryShootSaucer dt angle gs4
       -- beweeg alles
       let moved = gs5
                   { players = movePlayer dt (players gs5)
-                  , enemies = map (moveEnemy dt) (enemies gs5)
+                  , enemies = map (moveEnemy dt (position $ playerMovement $ players gs)) (enemies gs5)
                   , bullets = map (moveBullet dt) (bullets gs5)
                   , effects = updateAnimations dt (effects gs5)}
       let limited = limitPlayerSpeed moved                                                      -- limiet op speler snelheid

@@ -14,10 +14,43 @@ movePlayer dt p =
   p { playerMovement =
         moveMovement dt (playerMovement p) }
 
-moveEnemy :: Float -> Enemy -> Enemy
-moveEnemy dt e =
-  e { enemyMovement =
-        moveMovement dt (enemyMovement e) }
+moveEnemy :: Float -> Point -> Enemy -> Enemy
+moveEnemy dt playerPos e =
+  case enemyType e of                                                           --Movement gedrag van MovingAsteroid
+    AsteroidMoving ->
+      chasePlayer dt playerPos e
+    _ ->                                                                        --Movement gedrag rest
+      e { enemyMovement = 
+            moveMovement dt (enemyMovement e) }
+
+chasePlayer :: Float -> Point -> Enemy -> Enemy                                 --Laat MovingAsteroid de speler volgen
+chasePlayer dt playerPos e =
+  let
+    m = enemyMovement e
+    (ex, ey) = position m
+    (px, py) = playerPos
+
+    dx = px - ex
+    dy = py - ey
+    distance = len (dx, dy)                                                    --Afstand van asteroid en speler
+
+    direction
+      | distance == 0 = (0, 0)
+      | otherwise = (dx / distance, dy / distance)                             --Normalized afstand
+
+    acceleration = 20
+    velocity' = velocity m `add` ((acceleration * dt) `scaleVec` direction)
+
+    maxSpeed = 60
+    speed = len velocity'
+    velocity'' =
+      if speed > maxSpeed
+      then (maxSpeed / speed) `scaleVec` velocity'                              --limiteert de snelheid
+      else velocity'
+      
+    m' = m { velocity = velocity'' }
+  in
+    e { enemyMovement = moveMovement dt m' }
 
 moveBullet :: Float -> Bullet -> Bullet
 moveBullet dt b =
