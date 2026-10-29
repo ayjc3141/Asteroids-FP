@@ -8,7 +8,7 @@ import Model
 import Shooting
 import Movement
 import Spawning (checkWave) 
-
+import Animations
 
 
 -- klaar
@@ -50,7 +50,7 @@ updateWorld dt gs                                                               
                   { players = movePlayer dt (players gs5)
                   , enemies = map (moveEnemy dt) (enemies gs5)
                   , bullets = map (moveBullet dt) (bullets gs5)
-                  }
+                  , effects = updateAnimations dt (effects gs5)}
       let limited = limitPlayerSpeed moved                                                      -- limiet op speler snelheid
 
       let gs6 = handlePlayerCollisions limited

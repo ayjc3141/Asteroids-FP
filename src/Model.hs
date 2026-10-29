@@ -104,13 +104,25 @@ data GameState = GameState
   } deriving (Show)
 
 --animaties
-data AnimationType = Death | Explosion deriving (Show, Eq)
+data AnimationType = Saucer | Asteroid deriving (Show, Eq)
 
 data Animation = Animation 
   { animationPosition  :: Point
   , duration           :: Float
   , animationType      :: AnimationType
+  , particles          :: [(Point,Point)]
   } deriving (Show, Eq)
+
+pattern :: [(Point, Point)]
+pattern = 
+    [ ((-5,  0) , (-50,  10))
+    , (( 5,  0) , ( 50, -10))
+    , (( 0,  5) , ( 10,  50))
+    , (( 0, -5) , (-10, -50))
+    , (( 3,  3) , ( 40,  40))
+    , ((-3, -3) , (-40, -40))
+    , ((-3,  3) , (-40,  40))
+    , (( 3, -3) , ( 40, -40))]
 -- score
 data HighScore = HighScore
   { playerName  :: String

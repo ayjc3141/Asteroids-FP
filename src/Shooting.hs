@@ -2,7 +2,7 @@ module Shooting where
 import Data.List (foldl')
 import Model
 import Graphics.Gloss.Data.Point
-
+import Animations
 reduceHP :: Enemy -> Enemy
 reduceHP e = e {enemyHitpoints = (enemyHitpoints e) - 1}
 
@@ -130,13 +130,15 @@ bulletHitsPlayer b p =
 
 handleBulletCollisions :: GameState -> GameState
 handleBulletCollisions gs | null hit = gs
-                          | otherwise = gs {enemies = rest, bullets = restb, score = score gs + 100}
+                          | otherwise = gs {enemies = rest, bullets = restb, effects = effects gs ++ neweffect, score = score gs + 100}
                         where
                             bs            = bullets gs
                             es            = enemies gs
                             isHit e       = any (\b -> bulletType b == Friend && hitsBullet b e) bs
                             hit           = map reduceHP (filter isHit es)
                             reduced       = [if isHit e then reduceHP e else e | e <- es]
+                            dead          = [e | e <- reduced, enemyHitpoints e <= 0]
+                            neweffect     = [Animation (position $ enemyMovement e) 0.5 (chooseEffect $ enemyType e) (moveEffect e pattern) | e <- dead]
                             rest          = [e | e <- reduced, enemyHitpoints e > 0]
                             bulletsHit b  = any (\e -> bulletType b == Friend && hitsBullet b e) es
                             restb         = filter (not . bulletsHit) bs

@@ -1,7 +1,7 @@
 module View where
-
 import Graphics.Gloss
 import Model
+
 
 -- ik weet niet of de types allemaal kloppen, maar zo leek het enigzins logisch.
 
@@ -54,8 +54,21 @@ drawPlayer p =
   where
     Movement (x, y) _ rotDeg = playerMovement p
 
+
+drawParticle :: (Point, Point) -> Picture
+drawParticle ((x, y), (vx, vy)) =
+    Line [(x, y), (x + vx * 0.1, y + vy * 0.1)]
+
+
+drawEffect :: Animation -> Picture
+drawEffect animation =
+    Pictures
+        [ Color kleur (drawParticle particle) | particle <- particles animation]
+        where
+          kleur = if animationType animation == Saucer then orange else greyN 0.7
+
 drawEffects :: [Animation] -> Picture
-drawEffects _ = Blank
+drawEffects animations = Pictures (map drawEffect animations)
 
 drawEnemy :: Enemy -> Picture
 drawEnemy e =
