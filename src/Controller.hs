@@ -48,7 +48,7 @@ updateWorld dt gs                                                               
       -- beweeg alles
           moved = gs2
                   { players = map (movePlayer dt . limitPlayerSpeed . updatePlayerMovement) (players gs2)
-                  , enemies = map (\e -> moveEnemy dt (position $ playerMovement $ closestPlayer e (players gs)) e) (enemies gs2)
+                  , enemies = map (\e -> moveEnemy dt (position $ playerMovement $ closestPlayer e (players gs)) e)  (enemies gs2)
                   , bullets = map (moveBullet dt) (bullets gs2)
                   , effects = updateAnimations dt (effects gs2)} 
           gs3 = handlePlayerCollisions moved

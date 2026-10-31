@@ -19,9 +19,15 @@ moveEnemy dt point e =
   case enemyType e of                                                           --Movement gedrag van MovingAsteroid
     AsteroidMoving ->
       chasePlayer dt point e
+    SaucerSmall ->
+        e {enemyMovement = moveMovement dt ((enemyMovement e) {velocity = scaleVec 60 vel})}
+    SaucerEnormous ->
+        e { enemyMovement = moveMovement dt ((enemyMovement e) {velocity = scaleVec 30 vel})}
     _ ->                                                                        --Movement gedrag rest
       e { enemyMovement = 
             moveMovement dt (enemyMovement e) }
+    where
+      vel = scaleVec (1.0 / len (velocity $ enemyMovement e)) (velocity $ enemyMovement e)  
 
 chasePlayer :: Float -> Point -> Enemy -> Enemy                                 --Laat MovingAsteroid de speler volgen
 chasePlayer dt playerPos e =
