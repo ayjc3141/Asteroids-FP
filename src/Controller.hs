@@ -14,14 +14,20 @@ import System.Random (randomRIO)
 -- klaar
 handleInput :: Event -> GameState -> IO GameState
 handleInput (EventKey key keyState _ _) gs =                                                    -- eventkey = input event (toets indruk of loslaten), keystate = ingedrukt of niet, gs = gamestate, _ _ = muisinfo (onbelangrijk)
+  --Speler 1 inputs
   case key of                                                                                   -- case of = welke toets is ingedrukt
-    SpecialKey KeyLeft  -> pure $ updateInput (\i -> i { turnLeft  = isDown keyState }) gs      -- pijltje links, update turnLeft
-    SpecialKey KeyRight -> pure $ updateInput (\i -> i { turnRight = isDown keyState }) gs      -- pijltje rechts, update turnRight
-    SpecialKey KeyUp    -> pure $ updateInput (\i -> i { thrust    = isDown keyState }) gs      -- pijltje omhoog, update thrust
-    SpecialKey KeySpace ->                                                                      -- pure is algemener dan return (applicative)
-      case keyState of
-        Down -> pure $ setShoot True  gs                                                        -- indrukken = schieten en start auto-fire
-        Up   -> pure $ setShoot False gs                                                        -- loslaten = stop schieten
+    SpecialKey KeyLeft  -> pure $ updateInput 1 (\i -> i { turnLeft  = isDown keyState }) gs      -- pijltje links, update turnLeft
+    SpecialKey KeyRight -> pure $ updateInput 1 (\i -> i { turnRight = isDown keyState }) gs      -- pijltje rechts, update turnRight
+    SpecialKey KeyUp    -> pure $ updateInput 1 (\i -> i { thrust    = isDown keyState }) gs      -- pijltje omhoog, update thrust
+    SpecialKey KeySpace -> pure $ setShoot 1 (isDown keyState) gs                                 -- pure is algemener dan return (applicative)
+
+  
+  --Speler 2 inputs
+    Char 'a' -> pure $ updateInput 2 (\i -> i { turnLeft = isDown keyState }) gs
+    Char 'd' -> pure $ updateInput 2 (\i -> i { turnRight = isDown keyState }) gs
+    Char 'w' -> pure $ updateInput 2 (\i -> i { thrust = isDown keyState }) gs
+    Char 'c' -> pure $ setShoot 2 (isDown keyState) gs
+    
     Char 'p' | keyState == Down -> pure (togglePause gs)                                        -- p = pauze aan/uit
     _ -> pure gs                                                                                -- andere toets = niks doen
   where
@@ -32,45 +38,35 @@ handleInput _ gs = pure gs                                                      
 
 updateWorld :: Float -> GameState -> IO GameState
 updateWorld dt gs                                                                               -- dt = tijd tussen frames, gs = huidige gamestate
-  | paused gs = pure gs  -- als spel gepauzeerd = niks doen
+  | paused gs = pure gs                                                                         -- als spel gepauzeerd = niks doen
   | lives gs <= 0 = pure gs
   | otherwise = do
       angle <- randomRIO (-25, 25)                                                          --schiet angle van kleine saucers
-      let inpRaw = playerInput (players gs)                                                                -- ruwe input van speler
-
-      -- pas acties toe op volgorde
-      let gs1 = if turnLeft  inpRaw then turnPlayer (-5) gs else gs                         -- draai links
-      let gs2 = if turnRight inpRaw then turnPlayer 5 gs1 else gs1                          -- draai rechts
-      let gs3 = if thrust    inpRaw then acceleratePlayer 1 gs2 else gs2                    -- thrust vooruit
-
       -- schieten en cooldown
-      let gs4 = tryShoot dt gs3                                                                 -- altijd aanroepen, checkt cooldown en spawnt evt. bullet
-      let gs5 = tryShootSaucer dt angle gs4
+      let gs1 = tryShootAll dt gs                                                                 -- altijd aanroepen, checkt cooldown en spawnt evt. bullet
+          gs2 = tryShootSaucer dt angle gs1
       -- beweeg alles
-      let moved = gs5
-                  { players = movePlayer dt (players gs5)
-                  , enemies = map (moveEnemy dt (position $ playerMovement $ players gs)) (enemies gs5)
-                  , bullets = map (moveBullet dt) (bullets gs5)
-                  , effects = updateAnimations dt (effects gs5)}
-      let limited = limitPlayerSpeed moved                                                      -- limiet op speler snelheid
+          moved = gs2
+                  { players = map (movePlayer dt . limitPlayerSpeed . updatePlayerMovement) (players gs2)
+                  , enemies = map (\e -> moveEnemy dt (position $ playerMovement $ closestPlayer e (players gs)) e) (enemies gs2)
+                  , bullets = map (moveBullet dt) (bullets gs2)
+                  , effects = updateAnimations dt (effects gs2)} 
+          gs3 = handlePlayerCollisions moved
 
-      let gs6 = handlePlayerCollisions limited
-
-      let gs7 = handleBulletCollisions gs6
-      let gs8 = handleSaucBulletCollisions gs7
+          gs4 = handleBulletCollisions gs3
+          gs5 = handleSaucBulletCollisions gs4
       
-      checkWave gs8                                                                  -- check of nieuwe wave nodig is
+      checkWave gs5                                                                  -- check of nieuwe wave nodig is
 
 
 togglePause :: GameState -> GameState
 togglePause gs = gs { paused = not (paused gs) }                                               -- toggle pauze aan/uit
 
-updateInput :: (Input -> Input) -> GameState -> GameState
-updateInput f gs =
-  gs
-      { players =
-          p { playerInput = f (playerInput p) }                                                --update player input
-      }
+updateInput :: Int -> (Input -> Input) -> GameState -> GameState
+updateInput nr f gs =
+  gs {players = map updatePlayer (players gs)}
   where
-    p = players gs
+    updatePlayer p
+      | playerNr p == nr = p {playerInput = f (playerInput p)}
+      | otherwise = p
 

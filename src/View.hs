@@ -2,15 +2,11 @@ module View where
 import Graphics.Gloss
 import Model
 
-
--- ik weet niet of de types allemaal kloppen, maar zo leek het enigzins logisch.
-
-
 -- teken gamestate naar picture, zelfde wereld geeft altijd dezelfde tekening (pure)
 drawGame :: GameState -> Picture
 drawGame gs =
   Pictures
-    [ drawPlayer (players gs)
+    [ drawPlayers (players gs)
     , drawEnemies (enemies gs)
     , drawBullets (bullets gs)
     , drawEffects (effects gs)
@@ -21,7 +17,7 @@ drawGame gs =
 
 drawGameOver :: GameState -> Picture
 drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 900 700)
-                                            , translate (-200) 100 $
+                                            , translate (-180) 100 $
                                               scale  0.5 0.5 $
                                               color red $
                                               Text "Game Over" 
@@ -32,28 +28,27 @@ drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 90
                                             , translate 0 (-100) $
                                               color white $
                                               rectangleSolid 200 50
-                                            , translate 0 (-100) $
+                                            , translate (-70) (-110) $
                                               scale 0.25 0.25 $
                                               color black $
                                               Text "Opnieuw"
                                             ]
                 | otherwise = Blank 
 
--- teken entiteiten
---drawAllEntities :: [Entity] -> Picture
---drawAllEntities ents = Pictures (map drawEntity ents)           -- ents is lijst entiteiten, functie drawEntity over lijst. Pictures, zie vorige functie
-
--- teken 1 entiteit
 -- teken een player
 drawPlayer :: Player -> Picture
 drawPlayer p =
   translate x y $
   rotate rotDeg $
-  color white $
+  color playerColor $
   polygon [(-10, -10), (20, 0), (-10, 10)]
   where
     Movement (x, y) _ rotDeg = playerMovement p
+    playerColor | playerNr p == 1 = green
+                | otherwise = blue
 
+drawPlayers :: [Player] -> Picture                  --teken beide spelers
+drawPlayers ps = pictures (map drawPlayer ps)       
 
 drawParticle :: (Point, Point) -> Picture
 drawParticle ((x, y), (vx, vy)) =

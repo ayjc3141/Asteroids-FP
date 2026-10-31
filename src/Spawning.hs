@@ -17,15 +17,15 @@ spawnNewWave n gs = do
   newEnemies <- replicateM (3+n) (spawnEnemy playerPos)
   pure $ gs { enemies = enemies gs ++ newEnemies, wave = n }                                    -- Voeg toe aan game
   where
-    playerPos = position $ playerMovement $ players $ gs
+    playerPos = map (position . playerMovement) (players gs)
 
-validSpawn :: Point -> IO Point                                                                 -- genereert enemy positions die niet te dichtbij de player zijn
-validSpawn playerPos = do
+validSpawn :: [Point] -> IO Point                                                                 -- genereert enemy positions die niet te dichtbij de player zijn
+validSpawn [player1Pos, player2Pos] = do
     x <- randomRIO (-400,400)
     y <- randomRIO (-300,300)
-    if not (collides playerPos 50 (x,y) 50)
+    if not (collides player1Pos 50 (x,y) 50) && not (collides player2Pos 50 (x,y) 50)
       then pure (x,y)
-      else validSpawn playerPos
+      else validSpawn [player1Pos, player2Pos]
 
 pickEnemy :: [(Int, EnemyType)] -> IO EnemyType
 pickEnemy enWeights= do
@@ -37,7 +37,7 @@ pickEnemy enWeights= do
     weightSum = sum weights
     weights = map fst enWeights
 
-spawnEnemy :: Point -> IO Enemy
+spawnEnemy :: [Point] -> IO Enemy
 spawnEnemy playerPos = do
   (x,y) <- validSpawn playerPos
   vx    <- randomRIO (-30,30)

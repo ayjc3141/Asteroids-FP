@@ -15,10 +15,10 @@ movePlayer dt p =
         moveMovement dt (playerMovement p) }
 
 moveEnemy :: Float -> Point -> Enemy -> Enemy
-moveEnemy dt playerPos e =
+moveEnemy dt point e =
   case enemyType e of                                                           --Movement gedrag van MovingAsteroid
     AsteroidMoving ->
-      chasePlayer dt playerPos e
+      chasePlayer dt point e
     _ ->                                                                        --Movement gedrag rest
       e { enemyMovement = 
             moveMovement dt (enemyMovement e) }
@@ -62,50 +62,46 @@ moveBullet dt b =
         (vx,vy) = velocity $ bulletMovement b
 
    -- klaar
-turnPlayer :: Float -> GameState -> GameState
-turnPlayer deg gs =
-  let p = players gs
+turnPlayer :: Float -> Player -> Player
+turnPlayer deg p =
+  p { playerMovement =
+       m { rotation = rotation m + deg }
+    }
+    where
       m = playerMovement p
-  in gs
-       { players =
-           p { playerMovement =
-                 m { rotation = rotation m + deg }
-             }
-       }
 
 -- klaar
-acceleratePlayer :: Float -> GameState -> GameState
-acceleratePlayer amt gs =
-  let p = players gs
-      m = playerMovement p
+acceleratePlayer :: Float -> Player -> Player
+acceleratePlayer amt p =
+  let m = playerMovement p
       (vx, vy) = velocity m
       dir = -(rotation m * pi / 180)                                                --graden -> radialen
       newVel =
         (vx + cos dir * amt, vy + sin dir * amt)                                  -- nieuwe snelheid
-  in gs
-       { players =
-           p { playerMovement =
-                 m { velocity = newVel }
-             }
-       }
+  in  p { playerMovement =
+            m { velocity = newVel }
+        }
 
-limitPlayerSpeed :: GameState -> GameState
-limitPlayerSpeed gs =
-      let p = players gs
-          m = playerMovement p
+limitPlayerSpeed :: Player -> Player
+limitPlayerSpeed p =
+      let m = playerMovement p
           (vx,vy) = velocity m
           speed = len (vx,vy)
           maxSpeed = 60
           factor = maxSpeed / speed
       in if speed > maxSpeed                                                      --if speed exceeds max  
-         then
-            gs
-              { players =
-                  p {playerMovement =
-                      m {velocity = factor `scaleVec` (vx, vy)}                   --scale velocity down
-                    }
-              }
-          else gs
+          then p {playerMovement =
+                    m {velocity = factor `scaleVec` (vx, vy)}                   --scale velocity down
+                 }
+          else p
+
+updatePlayerMovement :: Player -> Player
+updatePlayerMovement p =
+  let inp = playerInput p
+      p1  = if turnLeft inp  then turnPlayer (-5) p     else p
+      p2  = if turnRight inp then turnPlayer 5 p1       else p1
+      p3  = if thrust inp    then acceleratePlayer 1 p2 else p2
+  in p3
 
 wrap :: Float -> Float -> Float -> Float                                                        
 wrap mini maxi x | x < mini = maxi

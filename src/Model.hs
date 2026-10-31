@@ -79,6 +79,7 @@ data Player = Player
   , playerAlive         :: Bool
   , playerHitbox        :: Float 
   , playerInput         :: Input
+  , playerCooldown      :: Float
   } deriving (Show, Eq)
 
 -- bullets
@@ -98,7 +99,7 @@ data Input = Input
 
 -- speltoestand
 data GameState = GameState 
-  { players :: Player
+  { players :: [Player]
   , enemies :: [Enemy]
   , bullets :: [Bullet]
   , effects :: [Animation]
@@ -106,7 +107,6 @@ data GameState = GameState
   , lives   :: Int
   , wave    :: Int
   , paused  :: Bool
-  , cooldown:: Float
   , saucercd:: Float
   } deriving (Show)
 
@@ -131,14 +131,14 @@ data HighScore = HighScore
 initialGameState :: GameState
 initialGameState =
   GameState
-    { players = Player 1 (Movement (0,0) (0,0) 0) True 7 (Input False False False False)
+    { players = [ Player 1 (Movement (-50,0) (0,0) 0) True 7 (Input False False False False) 0
+                , Player 2 (Movement ( 50,0) (0,0) 180) True 7 (Input False False False False) 0]
     , enemies = []
     , bullets = []
     , effects = []
     , score   = 0
     , lives   = 3
     , wave    = 0
-    , paused  = False
-    , cooldown = 0                                      -- nieuw
-    , saucercd = 0
+    , paused  = False                                     
+    , saucercd = 0          -- nieuw
     }
