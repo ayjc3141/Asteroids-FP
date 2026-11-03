@@ -5,21 +5,23 @@ import System.Random (randomRIO)
 import Graphics.Gloss.Data.Point
 import Shooting
 
-
+--Check of een nieuwe wave nodig is
 checkWave :: GameState -> IO GameState
 checkWave gs
-  | null (enemies gs) =                                                                         --geen enemy?
-      spawnNewWave (wave gs + 1) gs                                                             --dan nieuwe wave
-  | otherwise = pure gs                                                                         --anders niks doen
+  | null (enemies gs) =
+      spawnNewWave (wave gs + 1) gs
+  | otherwise = pure gs
 
+--Spawnt nieuwe enemies (meer elke wave)
 spawnNewWave :: Int -> GameState -> IO GameState
 spawnNewWave n gs = do 
   newEnemies <- replicateM (3+n) (spawnEnemy playerPos)
-  pure $ gs { enemies = enemies gs ++ newEnemies, wave = n }                                    -- Voeg toe aan game
+  pure $ gs { enemies = enemies gs ++ newEnemies, wave = n }
   where
     playerPos = map (position . playerMovement) (players gs)
 
-validSpawn :: [Point] -> IO Point                                                                 -- genereert enemy positions die niet te dichtbij de player zijn
+-- genereert enemy positions die niet te dichtbij de player zijn
+validSpawn :: [Point] -> IO Point
 validSpawn [player1Pos, player2Pos] = do
     x <- randomRIO (-400,400)
     y <- randomRIO (-300,300)
@@ -27,6 +29,7 @@ validSpawn [player1Pos, player2Pos] = do
       then pure (x,y)
       else validSpawn [player1Pos, player2Pos]
 
+--Kiest welke enemies worden gespawnd
 pickEnemy :: [(Int, EnemyType)] -> IO EnemyType
 pickEnemy enWeights= do
   nr <- randomRIO (1, weightSum)
@@ -37,6 +40,7 @@ pickEnemy enWeights= do
     weightSum = sum weights
     weights = map fst enWeights
 
+--Spawn een enemy 
 spawnEnemy :: [Point] -> IO Enemy
 spawnEnemy playerPos = do
   (x,y) <- validSpawn playerPos

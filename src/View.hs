@@ -2,7 +2,7 @@ module View where
 import Graphics.Gloss
 import Model
 
--- teken gamestate naar picture, zelfde wereld geeft altijd dezelfde tekening (pure)
+-- Teken gamestate naar picture, zelfde wereld geeft altijd dezelfde tekening (pure)
 drawGame :: GameState -> Picture
 drawGame gs =
   Pictures
@@ -15,6 +15,7 @@ drawGame gs =
     , drawGameOver gs
     ]
 
+--Teken Game Over screen
 drawGameOver :: GameState -> Picture
 drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 900 700)
                                             , translate (-180) 100 $
@@ -35,10 +36,10 @@ drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 90
                                             ]
                 | otherwise = Blank 
 
--- teken een player
+--Teken een player
 drawPlayer :: Player -> Picture
 drawPlayer p 
-  | not (even (floor $ 10*iframes)) = Blank
+  | not (even (floor $ 10*iframes)) = Blank --Laat player knipperen als immuun
   | otherwise =
     translate x y $
     rotate rotDeg $
@@ -50,15 +51,17 @@ drawPlayer p
     playerColor | playerNr p == 1 = green
                 | otherwise = blue
 
-    
-drawPlayers :: [Player] -> Picture                  --teken beide spelers
+--Teken beide spelers
+drawPlayers :: [Player] -> Picture 
 drawPlayers ps = pictures (map drawPlayer ps)       
 
+
+--Tekent de individuele lijnen bij een effect
 drawParticle :: (Point, Point) -> Picture
 drawParticle ((x, y), (vx, vy)) =
     Line [(x, y), (x + vx * 0.1, y + vy * 0.1)]
 
-
+--Tekent een effect
 drawEffect :: Animation -> Picture
 drawEffect animation =
     Pictures
@@ -66,9 +69,11 @@ drawEffect animation =
         where
           kleur = effectColor animation
 
+--Tekent alle effects op scherm
 drawEffects :: [Animation] -> Picture
 drawEffects animations = Pictures (map drawEffect animations)
 
+--Tekent een enemy
 drawEnemy :: Enemy -> Picture
 drawEnemy e =
   translate x y $
@@ -78,9 +83,11 @@ drawEnemy e =
   where
     Movement (x, y) _ rotDeg = enemyMovement e
 
+--Tekent alle enemies
 drawEnemies :: [Enemy] -> Picture
 drawEnemies l = Pictures (map drawEnemy l)
 
+--Teken een bullet op het scherm. Rood = enemy, geel = ally
 drawBullet :: Bullet -> Picture
 drawBullet b =
   translate x y $
@@ -90,10 +97,11 @@ drawBullet b =
     Movement (x, y) _ _ = bulletMovement b
     kleur               = if bulletType b == Foe then red else yellow
 
+--Teken alle bullets
 drawBullets :: [Bullet] -> Picture
 drawBullets l = Pictures (map drawBullet l)
 
--- kleur van entiteit
+--Geeft elke enemy een kleur
 colorFor :: EnemyType -> Color
 colorFor ent = case ent of
   MeteorEnormous  -> greyN 0.7
@@ -104,7 +112,7 @@ colorFor ent = case ent of
   SaucerEnormous  -> red
   SaucerSmall     -> orange
 
--- entiteit vorm
+--Geeft elke enemy een vorm
 shapeFor :: EnemyType -> Picture
 shapeFor MeteorEnormous =
   thickCircle 40 4
@@ -138,7 +146,7 @@ drawHUD gs =
     ++ "  Lives: " ++ show (lives gs)
     ++ "  Wave: "  ++ show (wave gs)
 
--- pauze scherm
+-- Pauze scherm
 drawPauseOverlay :: GameState -> Picture
 drawPauseOverlay gs
   | paused gs =                                                     -- paused == true

@@ -8,7 +8,7 @@ import Graphics.Gloss
 
 
 
---functies voor points
+--Functies voor points
 add :: Point -> Point -> Point
 add (x0,y0) (x1,y1) = (x0+x1,y0+y1)
 
@@ -31,7 +31,7 @@ data Movement = Movement
   , rotation :: Float 
   } deriving (Show, Eq)
 
--- alle enemies in spel
+-- Alle enemies in spel
 data Enemy = Enemy 
   { enemyType      :: EnemyType
   , enemyMovement  :: Movement 
@@ -49,7 +49,8 @@ data EnemyType
   | SaucerSmall
   deriving (Show, Eq)
 
-enemyWeights :: [(Int, EnemyType)]      --elke getal wijst naar de kans dat een enemy van dat type spawnt
+--De kans voor elke soort enemy om te spawnen
+enemyWeights :: [(Int, EnemyType)]      
 enemyWeights =  [ (20, AsteroidSmall)
                 , (20, AsteroidMedium)
                 , (35, AsteroidLarge)
@@ -58,11 +59,13 @@ enemyWeights =  [ (20, AsteroidSmall)
                 , (13, SaucerSmall)
                 , (2, SaucerEnormous)]
 
+--Hit points voor elke enemy type
 hpEnemy :: EnemyType -> Int
 hpEnemy MeteorEnormous = 2
 hpEnemy SaucerEnormous = 3
 hpEnemy _ = 1
 
+--Hitboxes
 hitboxEnemy :: EnemyType -> Float
 hitboxEnemy AsteroidSmall   = 12
 hitboxEnemy AsteroidMedium  = 20
@@ -72,24 +75,25 @@ hitboxEnemy MeteorEnormous  = 42
 hitboxEnemy SaucerSmall     = 18
 hitboxEnemy SaucerEnormous  = 25
 
--- beschrijving player
+-- Player
 data Player = Player 
   { playerNr            :: Int
   , playerMovement      :: Movement
   , playerIframes       :: Float
   , playerHitbox        :: Float 
   , playerInput         :: Input
-  , playerCooldown      :: Float
+  , playerCooldown      :: Float  --Schiet cooldown
   } deriving (Show, Eq)
 
--- bullets
+-- Bullets
 data BulletType = Friend | Foe deriving (Show, Eq)
 data Bullet = Bullet 
   { bulletMovement :: Movement
   , bulletType     :: BulletType 
   , bulletHitbox   :: Float
   } deriving (Show,Eq)
--- invoer speler
+
+-- Invoer speler
 data Input = Input
   { turnLeft  :: Bool
   , turnRight :: Bool
@@ -97,7 +101,7 @@ data Input = Input
   , shoot     :: Bool
   } deriving (Show, Eq)
 
--- speltoestand
+-- Speltoestand
 data GameState = GameState 
   { players :: [Player]
   , enemies :: [Enemy]
@@ -107,10 +111,10 @@ data GameState = GameState
   , lives   :: Int
   , wave    :: Int
   , paused  :: Bool
-  , saucercd:: Float
-  } deriving (Show)
+  , saucercd:: Float  --Schiet cooldown van saucers
+  } deriving Show
 
---animaties
+--Animaties
 data AnimationType = EnemyDeath | PlayerHit deriving (Show, Eq)
 
 data Animation = Animation 
@@ -121,13 +125,13 @@ data Animation = Animation
   , effectColor        :: Color
   } deriving (Show, Eq)
 
--- score
+-- Score
 data HighScore = HighScore
   { playerName  :: String
   , playerScore :: Int
   } deriving (Show, Eq, Ord)
 
--- beginstaat spel
+-- Beginstaat spel
 initialGameState :: GameState
 initialGameState =
   GameState
@@ -140,5 +144,5 @@ initialGameState =
     , lives   = 3
     , wave    = 0
     , paused  = False                                     
-    , saucercd = 0          -- nieuw
+    , saucercd = 0
     }
