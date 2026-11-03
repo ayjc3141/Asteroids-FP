@@ -105,7 +105,7 @@ limitPlayerSpeed p =
       let m = playerMovement p
           (vx,vy) = velocity m
           speed = len (vx,vy)
-          maxSpeed = 60
+          maxSpeed = 80
           factor = maxSpeed / speed
       in if speed > maxSpeed  
           then p {playerMovement =
@@ -119,7 +119,7 @@ updatePlayerMovement p =
   let inp = playerInput p
       p1  = if turnLeft inp  then turnPlayer (-5) p     else p
       p2  = if turnRight inp then turnPlayer 5 p1       else p1
-      p3  = if thrust inp    then acceleratePlayer 1 p2 else p2
+      p3  = if thrust inp    then acceleratePlayer 2 p2 else p2
   in p3
 
 --Wrap around voor enemies en spelers

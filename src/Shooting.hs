@@ -19,7 +19,7 @@ tryShoot :: Float -> Player -> (Player, [Bullet])
 tryShoot dt p =
   let cd' = max 0 (playerCooldown p - dt)
   in if shoot (playerInput p) && cd' <= 0
-        then (p {playerCooldown = 1.5}, [spawnBullet p])
+        then (p {playerCooldown = 0.75}, [spawnBullet p])
         else (p {playerCooldown = cd'}, [])
 
 --Probeert beide spelers tegelijk schieten
@@ -53,7 +53,7 @@ spawnBullet p =
         (x + cos dir * offset, y + sin dir * offset)
 
       bulletVelocity =
-        (vx + cos dir * 90, vy + sin dir * 90)
+        (cos dir * 150, sin dir * 150)
 
       bulletMovement' =
         Movement bulletPosition bulletVelocity (rotation m)
@@ -77,7 +77,7 @@ spawnSaucerBullet saucer angle player gs =
     bulletMovement' =
       Movement
         (sx, sy)
-        (dirX * 90, dirY * 90)
+        (dirX * 150, dirY * 150)
         0
     
     bullet = Bullet bulletMovement' Foe 2
@@ -167,6 +167,35 @@ bulletHitsPlayer b p =
     (px, py) = position pm
   in collides (bx,by) (bulletHitbox b) (px, py) (playerHitbox p) && (playerIframes p == 0)
 
+--Lets asteroids split in smaller chunks when destroyed
+split :: Enemy -> [Enemy]
+split e | enemyType e == MeteorEnormous = [ createEnemy AsteroidLarge 0
+                                          , createEnemy AsteroidLarge 120
+                                          , createEnemy AsteroidLarge 240]
+        | enemyType e == AsteroidLarge  = [ createEnemy AsteroidMedium 0
+                                          , createEnemy AsteroidMedium 120
+                                          , createEnemy AsteroidMedium 240]
+        | enemyType e == AsteroidMedium = [ createEnemy AsteroidSmall 0
+                                          , createEnemy AsteroidSmall 120
+                                          , createEnemy AsteroidSmall 240]
+        | otherwise = []
+  where
+    enMove = enemyMovement e
+    enVel  = velocity enMove
+    increase speed | len speed < 20 = 20 `scaleVec` ((1/(len speed)) `scaleVec` speed) 
+                   | otherwise = speed
+    --Makes 3 smaller asteroids all moving in different directions
+    createEnemy etype angle = Enemy etype (enMove {velocity = increase (rotateVec angle enVel)}) 1 (hitboxEnemy etype)
+
+--will update enemy list for splits
+updateSplit :: [Enemy] -> [Enemy]
+updateSplit es = 
+     let dead  = [e | e <- es, enemyHitpoints e <= 0]
+         alive = [e | e <- es, enemyHitpoints e >  0]
+         deadAsteroids = [e | e <- dead, not (isSaucer e)]
+         newAsteroids  = concatMap split deadAsteroids 
+     in alive ++ newAsteroids
+
 --Player schiet een enemy raak
 handleBulletCollisions :: GameState -> GameState
 handleBulletCollisions gs | null hit = gs
@@ -182,7 +211,8 @@ handleBulletCollisions gs | null hit = gs
                             hit           = filter isHit es
                             --Update enemies
                             reduced       = [if isHit e then reduceHP e else e | e <- es]
-                            newEnemies    = [e | e <- reduced, enemyHitpoints e > 0]
+                            postSplit     = updateSplit reduced
+                            newEnemies    = [e | e <- postSplit, enemyHitpoints e > 0]
                             --Plaats effect bij dode enemies
                             dead          = [e | e <- reduced, enemyHitpoints e <= 0]
                             neweffect     = [enemyEffect e | e <- dead]
