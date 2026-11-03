@@ -9,20 +9,18 @@ moveMovement dt m =
   in m
        { position = wrapPos (x + vx * dt, y + vy * dt) }
 
-movePlayer :: Float -> Player -> Player
-movePlayer dt p =
-  p { playerMovement =
-        moveMovement dt (playerMovement p) }
-
 moveEnemy :: Float -> Point -> Enemy -> Enemy
 moveEnemy dt point e =
   case enemyType e of                                                           --Movement gedrag van MovingAsteroid
     AsteroidMoving ->
       chasePlayer dt point e
+    
     SaucerSmall ->
         e {enemyMovement = moveMovement dt ((enemyMovement e) {velocity = scaleVec 60 vel})}
+    
     SaucerEnormous ->
         e { enemyMovement = moveMovement dt ((enemyMovement e) {velocity = scaleVec 30 vel})}
+    
     _ ->                                                                        --Movement gedrag rest
       e { enemyMovement = 
             moveMovement dt (enemyMovement e) }
@@ -67,7 +65,11 @@ moveBullet dt b =
         (x,y) = position $ bulletMovement b
         (vx,vy) = velocity $ bulletMovement b
 
-   -- klaar
+movePlayer :: Float -> Player -> Player
+movePlayer dt p =
+  p { playerMovement =
+        moveMovement dt (playerMovement p) }
+
 turnPlayer :: Float -> Player -> Player
 turnPlayer deg p =
   p { playerMovement =

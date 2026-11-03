@@ -76,7 +76,7 @@ hitboxEnemy SaucerEnormous  = 25
 data Player = Player 
   { playerNr            :: Int
   , playerMovement      :: Movement
-  , playerAlive         :: Bool
+  , playerIframes       :: Float
   , playerHitbox        :: Float 
   , playerInput         :: Input
   , playerCooldown      :: Float
@@ -131,8 +131,8 @@ data HighScore = HighScore
 initialGameState :: GameState
 initialGameState =
   GameState
-    { players = [ Player 1 (Movement (-50,0) (0,0) 0) True 7 (Input False False False False) 0
-                , Player 2 (Movement ( 50,0) (0,0) 180) True 7 (Input False False False False) 0]
+    { players = [ Player 1 (Movement (-50,0) (0,0) 0) 0 7 (Input False False False False) 0
+                , Player 2 (Movement ( 50,0) (0,0) 180) 0 7 (Input False False False False) 0]
     , enemies = []
     , bullets = []
     , effects = []

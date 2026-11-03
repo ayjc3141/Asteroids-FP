@@ -7,6 +7,11 @@ import Animations
 reduceHP :: Enemy -> Enemy
 reduceHP e = e {enemyHitpoints = (enemyHitpoints e) - 1}
 
+handleIframes :: Float -> Player -> Player 
+handleIframes dt p = p {playerIframes = iframes}
+  where 
+    iframes = max 0 (playerIframes p - dt)
+
 tryShoot :: Float -> Player -> (Player, [Bullet])
 tryShoot dt p =                                                                                     -- check cooldown en vuur indien mogelijk
   let cd' = max 0 (playerCooldown p - dt)                                                           -- aftellen cooldown
@@ -58,15 +63,19 @@ spawnSaucerBullet saucer angle player gs =
     dx       = px - sx
     dy       = py - sy
     distance = len (dx,dy)
+    
     (dirX, dirY)                                                                                       --Richting waar de saucer schiet
       | enemyType saucer == SaucerSmall = rotateVec angle (dx / distance, dy / distance)               --offset angle van kleine saucers
       | otherwise = (dx / distance, dy / distance) 
+    
     bulletMovement' =
       Movement
         (sx, sy)
         (dirX * 90, dirY * 90)
         0
+    
     bullet = Bullet bulletMovement' Foe 2
+  
   in gs { bullets = bullet : bullets gs }
 
 tryShootSaucer :: Float -> Float -> GameState -> GameState
@@ -102,7 +111,7 @@ collides :: Point -> Float -> Point -> Float -> Bool
 collides (x1, y1) r1 (x2, y2) r2 = len (x1 - x2, y1 - y2) < r1 + r2
 
 hitsPlayer :: Player -> Enemy -> Bool
-hitsPlayer p e = collides (px, py) (playerHitbox p) (ex, ey) (enemyHitbox e)
+hitsPlayer p e = (collides (px, py) (playerHitbox p) (ex, ey) (enemyHitbox e)) && (playerIframes p == 0)
             where
                 m = playerMovement p
                 n = enemyMovement e
@@ -116,13 +125,16 @@ handlePlayerCollisions :: GameState -> GameState
 handlePlayerCollisions gs | null hit = gs
                           | otherwise = 
                               gs 
-                                { enemies = rest
-                                , effects = effects gs ++ map createPlayerHitEffect ps
-                                , lives = lives gs -1}
+                                { effects = effects gs ++ map createPlayerHitEffect ps
+                                , lives = lives gs -1
+                                , players = map (checkIframes) ps}
                         where
-                            ps   = players gs
-                            hit  = filter (hitsAnyPlayer ps) (enemies gs)
-                            rest = filter (not . hitsAnyPlayer ps) (enemies gs)
+                            ps  = players gs
+                            hit = filter (hitsAnyPlayer ps) (enemies gs)
+                            checkIframes p
+                                = if any (hitsPlayer p) (enemies gs)
+                                  then p {playerIframes = 3.0}
+                                  else p
 
 hitsBullet :: Bullet -> Enemy -> Bool
 hitsBullet b e = collides (bx, by) (bulletHitbox b) (ex, ey) (enemyHitbox e)
@@ -139,7 +151,7 @@ bulletHitsPlayer b p =
     pm       = playerMovement p
     (bx, by) = position bm
     (px, py) = position pm
-  in collides (bx,by) (bulletHitbox b) (px, py) (playerHitbox p)
+  in collides (bx,by) (bulletHitbox b) (px, py) (playerHitbox p) && (playerIframes p == 0)
 
 
 handleBulletCollisions :: GameState -> GameState

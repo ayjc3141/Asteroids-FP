@@ -47,12 +47,12 @@ updateWorld dt gs                                                               
           gs2 = tryShootSaucer dt angle gs1
       -- beweeg alles
           moved = gs2
-                  { players = map (movePlayer dt . limitPlayerSpeed . updatePlayerMovement) (players gs2)
+                  { players = map (handleIframes dt . movePlayer dt . limitPlayerSpeed . updatePlayerMovement) (players gs2)
                   , enemies = map (\e -> moveEnemy dt (position $ playerMovement $ closestPlayer e (players gs)) e)  (enemies gs2)
                   , bullets = map (moveBullet dt) (bullets gs2)
                   , effects = updateAnimations dt (effects gs2)} 
+          
           gs3 = handlePlayerCollisions moved
-
           gs4 = handleBulletCollisions gs3
           gs5 = handleSaucBulletCollisions gs4
       

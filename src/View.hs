@@ -37,16 +37,20 @@ drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 90
 
 -- teken een player
 drawPlayer :: Player -> Picture
-drawPlayer p =
-  translate x y $
-  rotate rotDeg $
-  color playerColor $
-  polygon [(-10, -10), (20, 0), (-10, 10)]
+drawPlayer p 
+  | not (even (floor $ 10*iframes)) = Blank
+  | otherwise =
+    translate x y $
+    rotate rotDeg $
+    color playerColor $
+    polygon [(-10, -10), (20, 0), (-10, 10)]
   where
+    iframes = playerIframes p
     Movement (x, y) _ rotDeg = playerMovement p
     playerColor | playerNr p == 1 = green
                 | otherwise = blue
 
+    
 drawPlayers :: [Player] -> Picture                  --teken beide spelers
 drawPlayers ps = pictures (map drawPlayer ps)       
 
