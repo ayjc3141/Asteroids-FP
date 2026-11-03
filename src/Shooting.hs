@@ -156,7 +156,10 @@ bulletHitsPlayer b p =
 
 handleBulletCollisions :: GameState -> GameState
 handleBulletCollisions gs | null hit = gs
-                          | otherwise = gs {enemies = newEnemies, bullets = newBullets, effects = effects gs ++ neweffect, score = score gs + 100}
+                          | otherwise = gs { enemies = newEnemies
+                                           , bullets = newBullets
+                                           , effects = effects gs ++ neweffect
+                                           , score = score gs + 100}
                         where
                             bs            = bullets gs
                             es            = enemies gs
@@ -170,11 +173,17 @@ handleBulletCollisions gs | null hit = gs
                             newBullets    = filter (not . bulletsHit) bs                            --verwijder bullets die enemies raken
 
 handleSaucBulletCollisions :: GameState -> GameState
-handleSaucBulletCollisions gs = gs {lives = newLives, bullets = newBullets, effects = effects gs ++ newEffects}
+handleSaucBulletCollisions gs = gs { players = newPlayers
+                                   , lives = newLives
+                                   , bullets = newBullets
+                                   , effects = effects gs ++ newEffects}
                         where
                             bs            = bullets gs
                             ps            = players gs
-                            isHit player  = any (\b -> bulletType b == Foe && bulletHitsPlayer b player) bs 
+                            isHit player  = any (\b -> bulletType b == Foe && bulletHitsPlayer b player) bs
+                            checkIframe p | (isHit p) = p {playerIframes = 3.0} 
+                                          | otherwise = p
+                            newPlayers    = map checkIframe ps 
                             newLives      = if any isHit ps then (lives gs) - 1 else lives gs       --reduce player hp als een speler is geraakt
                             bulletsHit b  = bulletType b == Foe && any (bulletHitsPlayer b) ps      
                             newBullets    = filter (not . bulletsHit) bs                            --verwijder bullets die spelers raken
