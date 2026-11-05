@@ -130,3 +130,9 @@ wrap mini maxi x | x < mini = maxi
 
 wrapPos :: Point -> Point                                                                      --zorgt ervoor dat player of enemy aan de andere kant van het scherm terug komen.
 wrapPos (x,y) = (wrap (-450) 450 x, wrap (-350) 350 y)
+
+-- check if bullet is onscreen, because otherwise bullets do not dissapear if not colliding
+onScreen :: Bullet -> Bool
+onScreen b = abs x <= 450 && abs y <=350
+    where 
+        (x, y) = position (bulletMovement b)
