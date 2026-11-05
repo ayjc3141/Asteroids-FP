@@ -22,12 +22,12 @@ spawnNewWave n gs = do
 
 -- genereert enemy positions die niet te dichtbij de player zijn
 validSpawn :: [Point] -> IO Point
-validSpawn [player1Pos, player2Pos] = do
+validSpawn playerPos = do
     x <- randomRIO (-400,400)
     y <- randomRIO (-300,300)
-    if not (collides player1Pos 50 (x,y) 50) && not (collides player2Pos 50 (x,y) 50)
+    if all (\p -> not (collides p 50 (x,y) 50)) playerPos
       then pure (x,y)
-      else validSpawn [player1Pos, player2Pos]
+      else validSpawn playerPos
 
 --Kiest welke enemies worden gespawnd
 pickEnemy :: [(Int, EnemyType)] -> IO EnemyType
