@@ -107,6 +107,10 @@ closestPlayer e [p1, p2]
       distToP1      = len(x-x1, y-y1)
       distToP2      = len(x-x2, y-y2)
 
+closestPlayer _ (p:_) = p
+closestPlayer _ [] = error "No closest player"
+
+
 isSaucer :: Enemy -> Bool
 isSaucer en =
   et `elem`                                                                                     
