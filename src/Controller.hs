@@ -13,6 +13,10 @@ import System.Random (randomRIO)
 
 --Handelt Keyboard inputs
 handleInput :: Event -> GameState -> IO GameState
+handleInput (EventKey (MouseButton LeftButton) Down _ (mx, my)) gs 
+    | lives gs <= 0 && insideButton (mx, my) = pure initialGameState
+    | otherwise = pure gs
+
 handleInput (EventKey key keyState _ _) gs =
   --Speler 1 inputs
   case key of
@@ -36,6 +40,10 @@ handleInput (EventKey key keyState _ _) gs =
     isDown Up   = False -- helperfunctie: toets losgelaten
 handleInput _ gs = pure gs -- onbekende input = niks doen
 
+insideButton :: Point -> Bool
+insideButton (mx, my) =
+    mx >= -100 && mx <= 100 && my >= -125 && my <= -75
+
 -- Update de hele game state
 updateWorld :: Float -> GameState -> IO GameState
 updateWorld dt gs
@@ -52,7 +60,7 @@ updateWorld dt gs
           moved = gs2
                   { players = map (handleIframes dt . movePlayer dt . limitPlayerSpeed . updatePlayerMovement) (players gs2)
                   , enemies = map (\e -> moveEnemy dt (position $ playerMovement $ closestPlayer e (players gs)) e)  (enemies gs2)
-                  , bullets = map (moveBullet dt) (bullets gs2)
+                  , bullets = filter onScreen (map (moveBullet dt) (bullets gs2))
                   , effects = updateAnimations dt (effects gs2)} 
           
           -- CHeckt of iets wordt geraakt
