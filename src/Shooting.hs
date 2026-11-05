@@ -45,7 +45,6 @@ spawnBullet :: Player -> Bullet
 spawnBullet p =
   let m = playerMovement p
       (x, y) = position m
-      (vx, vy) = velocity m
       dir = -(rotation m * pi / 180)
       offset = 20
 
@@ -137,14 +136,15 @@ handlePlayerCollisions :: GameState -> GameState
 handlePlayerCollisions gs | null hit = gs
                           | otherwise = 
                               gs 
-                                { effects = effects gs ++ map createPlayerHitEffect ps
+                                { effects = effects gs ++ [createPlayerHitEffect p | p <- ps, isHitP p] 
                                 , lives = lives gs -1
                                 , players = map (checkIframes) ps} --Update immunity time
                         where
                             ps  = players gs
                             hit = filter (hitsAnyPlayer ps) (enemies gs) --Check of players gehit zijn
+                            isHitP p = any (hitsPlayer p) (enemies gs)
                             checkIframes p
-                                = if any (hitsPlayer p) (enemies gs)
+                                = if isHitP p 
                                   then p {playerIframes = 3.0}
                                   else p
 
@@ -202,7 +202,7 @@ handleBulletCollisions gs | null hit = gs
                           | otherwise = gs { enemies = newEnemies
                                            , bullets = newBullets
                                            , effects = effects gs ++ neweffect
-                                           , score = score gs + 100}
+                                           , score = score gs + sum(map(pointsFor.enemyType) dead)}
                         where
                             bs            = bullets gs
                             es            = enemies gs
