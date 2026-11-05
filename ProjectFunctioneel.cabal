@@ -66,7 +66,7 @@ executable ProjectFunctioneel
 
     -- Modules included in this executable, other than Main.
     -- other-modules:
-    other-modules:    Model, View, Controller, Shooting, Spawning, Movement, Animations
+    other-modules:    Model, View, Controller, Shooting, Spawning, Movement, Animations, HighScores
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -76,7 +76,8 @@ executable ProjectFunctioneel
         base ^>=4.18.3.0,
         gloss,
         gloss-juicy,
-        random
+        random,
+        directory
     -- Directories containing source files.
     hs-source-dirs: src
 

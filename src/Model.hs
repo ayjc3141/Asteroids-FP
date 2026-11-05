@@ -122,6 +122,7 @@ data GameState = GameState
   , wave    :: Int
   , paused  :: Bool
   , saucercd:: Float  --Schiet cooldown van saucers
+  , highScores :: [Int]
   } deriving Show
 
 --Animaties
@@ -155,4 +156,5 @@ initialGameState =
     , wave    = 0
     , paused  = False                                     
     , saucercd = 0
+    , highScores = []
     }
