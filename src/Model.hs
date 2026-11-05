@@ -49,6 +49,16 @@ data EnemyType
   | SaucerSmall
   deriving (Show, Eq)
 
+
+pointsFor :: EnemyType -> Int
+pointsFor MeteorEnormous = 20
+pointsFor AsteroidLarge  = 20
+pointsFor AsteroidMedium = 50
+pointsFor AsteroidSmall  = 100
+pointsFor AsteroidMoving = 150
+pointsFor SaucerEnormous = 200
+pointsFor SaucerSmall    = 500
+
 --De kans voor elke soort enemy om te spawnen
 enemyWeights :: [(Int, EnemyType)]      
 enemyWeights =  [ (20, AsteroidSmall)
