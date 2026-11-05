@@ -10,11 +10,12 @@ import Movement
 import Spawning (checkWave) 
 import Animations
 import System.Random (randomRIO)
+import HighScores (addHighScore, saveHighScores)
 
 --Handelt Keyboard inputs
 handleInput :: Event -> GameState -> IO GameState
 handleInput (EventKey (MouseButton LeftButton) Down _ (mx, my)) gs 
-    | lives gs <= 0 && insideButton (mx, my) = pure initialGameState
+    | lives gs <= 0 && insideButton (mx, my) = pure initialGameState { highScores = highScores gs }
     | otherwise = pure gs
 
 handleInput (EventKey key keyState _ _) gs =
@@ -68,7 +69,14 @@ updateWorld dt gs
           gs4 = handleBulletCollisions gs3
           gs5 = handleSaucBulletCollisions gs4
       
-      checkWave gs5 -- check of nieuwe wave nodig is
+      gs6 <- checkWave gs5 -- check of nieuwe wave nodig is
+
+      if lives gs6 <= 0
+        then do 
+            let newScores = addHighScore (score gs6) (highScores gs6)
+            saveHighScores newScores
+            pure gs6 {highScores = newScores}
+        else pure gs6
 
 -- toggle pauze aan/uit
 togglePause :: GameState -> GameState

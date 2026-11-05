@@ -18,14 +18,15 @@ drawGame gs =
 --Teken Game Over screen
 drawGameOver :: GameState -> Picture
 drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 900 700)
-                                            , translate (-180) 100 $
+                                            , translate (-180) 250 $
                                               scale  0.5 0.5 $
                                               color red $
-                                              Text "Game Over" 
-                                            , translate (-100) 25 $
+                                              Text "Game Over"
+                                            , translate (-100) 200 $
                                               scale 0.25 0.25 $
                                               color white $
                                               Text ("Score: " ++ show (score gs))
+                                            , drawHighScores (highScores gs) 
                                             , translate 0 (-100) $
                                               color white $
                                               rectangleSolid 200 50
@@ -34,12 +35,12 @@ drawGameOver gs | lives gs <= 0 = Pictures [color (greyN 0.5) (rectangleSolid 90
                                               color black $
                                               Text "Opnieuw"
                                             ]
-                | otherwise = Blank 
+                | otherwise = Blank
 
 --Teken een player
 drawPlayer :: Player -> Picture
 drawPlayer p 
-  | not (even (floor $ 10*iframes)) = Blank --Laat player knipperen als immuun
+  | not (even (floor ( 10*iframes) :: Int)) = Blank --Laat player knipperen als immuun
   | otherwise =
     translate x y $
     rotate rotDeg $
@@ -158,3 +159,9 @@ drawPauseOverlay gs
           Text "PAUSED"
         ]
   | otherwise = Blank                                               -- paused == false
+
+
+drawHighScores :: [Int] -> Picture
+drawHighScores scores =
+  Pictures ( translate (-75) 90 (scale 0.2 0.2 (color yellow (Text "Highscores")))
+  : [translate (-50) (55 - 25 * fromIntegral i) $ scale 0.15 0.15 $ color white $ Text (show (i + 1) ++ ". " ++ show s) | (i, s) <- zip [0 :: Int ..] scores])
