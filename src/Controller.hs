@@ -10,6 +10,7 @@ import Movement
 import Spawning (checkWave) 
 import Animations
 import System.Random (randomRIO)
+import HighScores (addHighScore, saveHighScores)
 
 --Handelt Keyboard inputs
 handleInput :: Event -> GameState -> IO GameState

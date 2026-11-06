@@ -30,16 +30,13 @@ version:            0.1.0.0
 
 -- URL for the project homepage or repository.
 homepage:
-    https://github.com/TomHub174/FunctioneelProgrammerenProject.git
+    https://github.com/ayjc3141/Asteroids-FP/
 
 -- The license under which the package is released.
-license:            BSD-3-Clause
-
--- The file containing the license text.
-license-file:       LICENSE
+license:            NONE
 
 -- The package author(s).
-author:             TomHub174
+author:             TomHub174, ayjc3141
 
 -- An email address to which users can send suggestions, bug reports, and patches.
 maintainer:         t.w.hubert@students.uu.nl

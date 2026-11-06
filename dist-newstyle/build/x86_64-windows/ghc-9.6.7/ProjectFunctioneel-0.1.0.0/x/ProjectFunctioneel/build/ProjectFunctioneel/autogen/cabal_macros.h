@@ -91,6 +91,16 @@
   (major1) == 9 && (major2) <  6 || \
   (major1) == 9 && (major2) == 6 && (minor) <= 7)
 #endif /* MIN_TOOL_VERSION_ghc_pkg */
+/* tool gpp-14.0.6 */
+#ifndef TOOL_VERSION_gpp
+#define TOOL_VERSION_gpp "14.0.6"
+#endif /* TOOL_VERSION_gpp */
+#ifndef MIN_TOOL_VERSION_gpp
+#define MIN_TOOL_VERSION_gpp(major1,major2,minor) (\
+  (major1) <  14 || \
+  (major1) == 14 && (major2) <  0 || \
+  (major1) == 14 && (major2) == 0 && (minor) <= 6)
+#endif /* MIN_TOOL_VERSION_gpp */
 /* tool haddock-2.29.2 */
 #ifndef TOOL_VERSION_haddock
 #define TOOL_VERSION_haddock "2.29.2"
@@ -121,16 +131,6 @@
   (major1) == 0 && (major2) <  68 || \
   (major1) == 0 && (major2) == 68 && (minor) <= 9)
 #endif /* MIN_TOOL_VERSION_hsc2hs */
-/* tool pkg-config-2.3.0 */
-#ifndef TOOL_VERSION_pkg_config
-#define TOOL_VERSION_pkg_config "2.3.0"
-#endif /* TOOL_VERSION_pkg_config */
-#ifndef MIN_TOOL_VERSION_pkg_config
-#define MIN_TOOL_VERSION_pkg_config(major1,major2,minor) (\
-  (major1) <  2 || \
-  (major1) == 2 && (major2) <  3 || \
-  (major1) == 2 && (major2) == 3 && (minor) <= 0)
-#endif /* MIN_TOOL_VERSION_pkg_config */
 /* tool runghc-9.6.7 */
 #ifndef TOOL_VERSION_runghc
 #define TOOL_VERSION_runghc "9.6.7"
@@ -141,6 +141,16 @@
   (major1) == 9 && (major2) <  6 || \
   (major1) == 9 && (major2) == 6 && (minor) <= 7)
 #endif /* MIN_TOOL_VERSION_runghc */
+/* tool strip-2.42 */
+#ifndef TOOL_VERSION_strip
+#define TOOL_VERSION_strip "2.42"
+#endif /* TOOL_VERSION_strip */
+#ifndef MIN_TOOL_VERSION_strip
+#define MIN_TOOL_VERSION_strip(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  42 || \
+  (major1) == 2 && (major2) == 42 && (minor) <= 0)
+#endif /* MIN_TOOL_VERSION_strip */
 
 #ifndef CURRENT_COMPONENT_ID
 #define CURRENT_COMPONENT_ID "ProjectFunctioneel-0.1.0.0-inplace-ProjectFunctioneel"
